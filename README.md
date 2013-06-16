@@ -15,10 +15,12 @@ Usage
 -----
 
 To rip a whole disk using default title duration limits...
-`./rip.pl --in /dev/sr0 --out /home/philc/transcode_out/`
+
+    ./rip.pl --in /dev/sr0 --out /home/philc/transcode_out/
 
 To rip a whole disk specifiying title duration limits...
-`./rip.pl --in /dev/sr0 --out /home/philc/transcode_out/ --mindur 3600 --maxdur=4000`
+
+    ./rip.pl --in /dev/sr0 --out /home/philc/transcode_out/ --mindur 3600 --maxdur=4000
 
 Requires
 --------
