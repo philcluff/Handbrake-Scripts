@@ -6,6 +6,8 @@ use Data::Dumper;
 
 my @drives = [];
 my $debug = $ENV{DEBUG};
+my $min_duration_seconds = 300;
+my $max_duration_seconds = 3600;
 
 print "About to scan drive...\n";
 my @scan_return_raw = `HandBrakeCLI -v -i /dev/sr0 -t 0 2>&1`;
@@ -58,8 +60,18 @@ foreach my $scan_line (@scan_return_processed) {
 }
 print "Found " . scalar(keys(%disk_titles)) . " titles for transcode.\n\n";
 
-print "Filtering out titles that don't fit within duration windows...\n\n";
+print "Filtering out titles that don't fit within duration windows (Min: $min_duration_seconds | Max: $max_duration_seconds)...\n";
+foreach my $title_id (keys(%disk_titles)) {
+    print "    Testing Title: $title_id\n";
+    my $this_title_duration = $disk_titles{$title_id}->{duration_seconds};
+    if (($this_title_duration > $min_duration_seconds) and ($this_title_duration < $max_duration_seconds)) {
 
+	print "        Will transcode Title: $title_id (Duration: $this_title_duration seconds)\n";
+    }
+    else {
+	delete $disk_titles{$title_id};
+    }
+}
 
 print "Processing done!\n\n";
 print Dumper \%disk_titles;
