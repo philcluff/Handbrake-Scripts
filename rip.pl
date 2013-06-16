@@ -8,9 +8,19 @@ my $debug = $ENV{DEBUG};
 my $min_duration_seconds = 600;
 my $max_duration_seconds = 3600;
 my $input_device = '/dev/sr0';
+my $output_source = '/home/philc/transcode_out/';
 
 my @titles_to_transcode_for_this_drive = find_and_filter_titles($input_device, $min_duration_seconds, $max_duration_seconds);
-print Dumper @titles_to_transcode_for_this_drive;
+log_debug("Main", @titles_to_transcode_for_this_drive);
+foreach my $tr (@titles_to_transcode_for_this_drive) {
+    transcode_file($tr);
+}
+
+sub transcode_file {
+    my $transcode_request = shift;
+    my $cmd = "HandBrakeCLI -v -i $transcode_request->{input_device} -t 1 -o $output_source/$transcode_request->{target_filename}.mkv  -4 -m -e x264 -x 'b-adapt=2:rc-lookahead=50:ref=6:bframes=8:subme=8:deblock=-1,-1:psy-rd=1|0.15' -q 19 --keep-display-aspect --loose-anamorphic --deinterlace='2:-1:-1:0:1'";
+    log_info($transcode_request->{input_device}, "About to run Transcode Command: [$cmd]");
+}
 
 sub log_info {
     my ($device, $message) = @_;
@@ -59,10 +69,12 @@ sub get_serial_from_raw {
 sub find_and_filter_titles {
     my ($input_device, $min_duration_seconds, $max_duration_seconds) = @_;
 
+    # Scan Disk to get raw output.
     log_info($input_device, "About to scan $input_device...");
     my @scan_return_raw = `HandBrakeCLI -v -i $input_device -t 0 2>&1`;
     log_info($input_device, "Got " . scalar(@scan_return_raw) . " lines from scan.");
 
+    # Process results into a usable hash.
     log_info($input_device, "Chomping results...");
     chomp @scan_return_raw;
     log_info($input_device, "Chomp done.");
@@ -108,7 +120,9 @@ sub find_and_filter_titles {
     }
     log_info($input_device, "Found " . scalar(keys(%disk_titles)) . " titles for transcode.");
 
+    # Filter out unwanted titles based on durations.
     log_info($input_device, "Filtering out titles that don't fit within duration windows (Min: $min_duration_seconds | Max: $max_duration_seconds)...");
+
     my $filtered_count = 0;
     foreach my $title_id (keys(%disk_titles)) {
 	log_info($input_device, "    Testing Title: $title_id");
@@ -122,20 +136,23 @@ sub find_and_filter_titles {
 	}
     }
     my $to_transcode_count = scalar(keys(%disk_titles));
+
     log_info($input_device, "Filtered out $filtered_count titles. Will transcode $to_transcode_count titles.");
 
-    # Last chance to see the disk info objects.
-    log_debug($input_device, Dumper \%disk_titles);
-
+    # Generate TranscodeRequests for the disk.
     log_info($input_device, "Coercing data into a more sensible (And ordered) format and generating TranscodeRequests...");
     my @transcode_requests;
     my @sorted_title_ids = sort {$a <=> $b} (keys(%disk_titles));
     foreach my $title_id (@sorted_title_ids) {
-	my $transcode_request = {'title_id' => $title_id, 'input_drive' => $input_device, 'target_filename' => "$serial-$title-title-$title_id"};  
+	my $transcode_request = {'title_id' => $title_id, 'input_device' => $input_device, 'target_filename' => "$serial-$title-title-$title_id"};  
 	push @transcode_requests, $transcode_request;
 
     }
     log_info($input_device, "Requesting " . scalar @transcode_requests . " TranscodeRequest objects.");
+
+    # Last chance to see the disk info objects.
+    log_debug($input_device, Dumper \%disk_titles);
+
     return @transcode_requests;
 
 }
