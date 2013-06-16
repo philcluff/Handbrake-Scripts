@@ -14,7 +14,7 @@ I'm in the process of archiving my DVD collection. This helps.
 Requires
 --------
 
-Perl (Stock install should be fine for most modern distros.)
+Perl (Should work with stock 5.14.2)
 
 Future Ideas?
 -------------
