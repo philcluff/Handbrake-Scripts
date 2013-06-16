@@ -3,22 +3,39 @@
 use warnings;
 use strict;
 use Data::Dumper;
+use Getopt::Long;
 
-my $debug = $ENV{DEBUG};
 my $min_duration_seconds = 600;
 my $max_duration_seconds = 3600;
-my $input_device = '/dev/sr0';
-my $output_source = '/home/philc/transcode_out/';
+my $input_device;
+my $output_path;
+
+GetOptions('mindur:i' => \$min_duration_seconds,
+           'maxdur:i' => \$max_duration_seconds,
+	   'in=s'     => \$input_device,
+	   'out=s'     => \$output_path,
+) or usage();
+
+usage() unless ($input_device and $output_path);
+
+my $debug = $ENV{DEBUG};
 
 my @titles_to_transcode_for_this_drive = find_and_filter_titles($input_device, $min_duration_seconds, $max_duration_seconds);
+
 log_debug("Main", @titles_to_transcode_for_this_drive);
+
 foreach my $tr (@titles_to_transcode_for_this_drive) {
     transcode_file($tr);
 }
 
+sub usage {
+    print "Usage: Don't ask...\n\n";
+    exit(255);
+}
+
 sub transcode_file {
     my $transcode_request = shift;
-    my $cmd = "HandBrakeCLI -v -i $transcode_request->{input_device} -t 1 -o $output_source/$transcode_request->{target_filename}.mkv  -4 -m -e x264 -x 'b-adapt=2:rc-lookahead=50:ref=6:bframes=8:subme=8:deblock=-1,-1:psy-rd=1|0.15' -q 19 --keep-display-aspect --loose-anamorphic --deinterlace='2:-1:-1:0:1'";
+    my $cmd = "HandBrakeCLI -v -i $transcode_request->{input_device} -t 1 -o $output_path/$transcode_request->{target_filename}.mkv  -4 -m -e x264 -x 'b-adapt=2:rc-lookahead=50:ref=6:bframes=8:subme=8:deblock=-1,-1:psy-rd=1|0.15' -q 19 --keep-display-aspect --loose-anamorphic --deinterlace='2:-1:-1:0:1'";
     log_info($transcode_request->{input_device}, "About to run Transcode Command: [$cmd]");
 }
 
