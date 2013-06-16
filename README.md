@@ -22,6 +22,10 @@ To rip a whole disk specifiying title duration limits...
 
     ./rip.pl --in /dev/sr0 --out /home/philc/transcode_out/ --mindur 3600 --maxdur=4000
 
+NOTE: for now, you need to set the environment variable "ENCODE" to actually run the encodes. EG:
+
+    ENCODE=1 ./rip.pl --in /dev/sr0 --out /home/philc/transcode_out/ --mindur 3600 --maxdur=4000
+
 Requires
 --------
 
