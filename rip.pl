@@ -13,9 +13,10 @@ my @titles_to_transcode_for_this_drive = find_and_filter_titles($input_device, $
 print Dumper @titles_to_transcode_for_this_drive;
 
 
-sub log_info_for_drive {
+sub log_info {
     my ($device, $message) = @_;
-    print " - [" . localtime .  "] - [$device] - ";
+    my $now = localtime;
+    print "[$now] - [$device] - $message";
 }
 
 sub get_title_from_raw {
@@ -45,13 +46,13 @@ sub get_serial_from_raw {
 sub find_and_filter_titles {
     my ($input_device, $min_duration_seconds, $max_duration_seconds) = @_;
 
-    print "About to scan $input_device...\n";
+    log_info($input_device, "About to scan $input_device...\n");
     my @scan_return_raw = `HandBrakeCLI -v -i $input_device -t 0 2>&1`;
-    print "Got " . scalar(@scan_return_raw) . " lines from scan.\n\n";
+    log_info($input_device, "Got " . scalar(@scan_return_raw) . " lines from scan.\n\n");
 
-    print "Chomping results...\n";
+    log_info($input_device, "Chomping results...\n");
     chomp @scan_return_raw;
-    print "Chomp done.\n\n";
+    log_info($input_device, "Chomp done.\n\n");
 
     print "Getting Title & Serial from results...\n";
     my $title = get_title_from_raw(@scan_return_raw);
