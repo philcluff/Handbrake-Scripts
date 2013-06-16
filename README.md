@@ -25,10 +25,12 @@ To rip a whole disk specifiying title duration limits...
 Requires
 --------
 
-Perl (Should work with stock 5.14.2)
+Perl (Tested with stock 5.14.2)
 Uses two "core" perl modules.
 * Data::Dumper
 * Getopt::Long
+
+HandbrakeCLI on the path.
 
 Future Ideas?
 -------------
