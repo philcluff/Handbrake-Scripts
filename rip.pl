@@ -6,7 +6,7 @@ use Data::Dumper;
 
 my @drives = [];
 my $debug = $ENV{DEBUG};
-my $min_duration_seconds = 300;
+my $min_duration_seconds = 600;
 my $max_duration_seconds = 3600;
 
 print "About to scan drive...\n";
@@ -27,9 +27,9 @@ my @scan_return_processed = grep(/^\s*\+/, @scan_return_raw);
 my $stripped_lines_count = scalar(@scan_return_raw) - scalar(@scan_return_processed);
 print "Removed $stripped_lines_count lines of data from the dump.\n\n";
 
-print "Processing response from Handbrake into a hash.\n";
+print "Processing response from Handbrake into a hash...\n";
 my %disk_titles;
-my $title_id;
+my $latest_title_id;
 
 foreach my $scan_line (@scan_return_processed) {
 
@@ -38,7 +38,7 @@ foreach my $scan_line (@scan_return_processed) {
  	print "    Found Title! [" . $scan_line . "]\n";
 	$disk_titles{$1} = {"title_id" => $1};
 	$disk_titles{$1}->{"raw_title"} = $scan_line;
-	$title_id = $1;
+	$latest_title_id = $1;
     }
 
     else {
@@ -47,8 +47,8 @@ foreach my $scan_line (@scan_return_processed) {
 	if ($scan_line =~ m/\s*\+ duration: (\d\d):(\d\d):(\d\d)/) {
 	    my ($h, $m, $s) = ($1, $2, $3);
 	    print "        Found duration! [" . $scan_line . "]\n";
-	    $disk_titles{$title_id}->{"duration_seconds"} = ($h * 3600) + ($m * 60) + $s;
-	    $disk_titles{$title_id}->{"raw_duration"} = $scan_line;
+	    $disk_titles{$latest_title_id}->{"duration_seconds"} = ($h * 3600) + ($m * 60) + $s;
+	    $disk_titles{$latest_title_id}->{"raw_duration"} = $scan_line;
 	}
 
 	else {
@@ -61,6 +61,7 @@ foreach my $scan_line (@scan_return_processed) {
 print "Found " . scalar(keys(%disk_titles)) . " titles for transcode.\n\n";
 
 print "Filtering out titles that don't fit within duration windows (Min: $min_duration_seconds | Max: $max_duration_seconds)...\n";
+my $filtered_count = 0;
 foreach my $title_id (keys(%disk_titles)) {
     print "    Testing Title: $title_id\n";
     my $this_title_duration = $disk_titles{$title_id}->{duration_seconds};
@@ -69,9 +70,12 @@ foreach my $title_id (keys(%disk_titles)) {
 	print "        Will transcode Title: $title_id (Duration: $this_title_duration seconds)\n";
     }
     else {
+	$filtered_count++;
 	delete $disk_titles{$title_id};
     }
 }
+my $to_transcode_count = scalar(keys(%disk_titles));
+print "Filtered out $filtered_count titles. Will transcode $to_transcode_count titles.\n\n";
 
 print "Processing done!\n\n";
 print Dumper \%disk_titles;
