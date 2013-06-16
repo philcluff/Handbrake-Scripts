@@ -30,7 +30,7 @@ Uses two "core" perl modules.
 * Data::Dumper
 * Getopt::Long
 
-HandbrakeCLI on the path.
+HandBrakeCLI on the path.
 
 Future Ideas?
 -------------
