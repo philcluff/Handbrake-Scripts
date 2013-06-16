@@ -16,20 +16,8 @@ chomp @scan_return_raw;
 print "Chomp done.\n\n";
 
 print "Getting Title & Serial from results...\n";
-my @titles = grep(/DVD Title:/, @scan_return_raw);
-my @serials = grep(/DVD Serial Number:/, @scan_return_raw);
-print "WARNING: Could not find title in output." if scalar @titles < 1;
-print "WARNING: Found many titles in output." if scalar @titles > 1;
-print "WARNING: Could not find serial in output." if scalar @serials < 1;
-print "WARNING: Found many serials in output." if scalar @serials > 1;
-print "Title (raw): " . $titles[0] . "\n" if $debug;
-$titles[0] =~ /DVD Title: (.*?)$/;
-my $title = $1;
-print "Title (processed): " . $title . "\n" if $debug;
-print "Serial (raw): " . $serials[0] . "\n" if $debug;
-$serials[0] =~ /DVD Serial Number: (.*?)$/;
-my $serial = $1;
-print "Serial (processed): " . $serial . "\n" if $debug;
+my $title = get_title_from_raw(@scan_return_raw);
+my $serial = get_serial_from_raw(@scan_return_raw);
 print "Got Serial [$serial] and Title [$title]\n\n";
 
 print "Stripping out the non-useful data from dump...\n";
@@ -72,5 +60,31 @@ print "Found " . scalar(keys(%disk_titles)) . " titles for transcode.\n\n";
 
 print "Filtering out titles that don't fit within duration windows...\n\n";
 
+
 print "Processing done!\n\n";
 print Dumper \%disk_titles;
+
+
+sub get_title_from_raw {
+    my @raw = shift;
+    my @titles = grep(/DVD Title:/, @scan_return_raw);
+    print "WARNING: Could not find title in output." if scalar @titles < 1;
+    print "WARNING: Found many titles in output." if scalar @titles > 1;
+    print "Title (raw): " . $titles[0] . "\n" if $debug;
+    $titles[0] =~ /DVD Title: (.*?)$/;
+    my $title = $1;
+    print "Title (processed): " . $title . "\n" if $debug;
+    return $title;
+}
+
+sub get_serial_from_raw {
+    my @raw = shift;
+    my @serials = grep(/DVD Serial Number:/, @scan_return_raw);
+    print "WARNING: Could not find serial in output." if scalar @serials < 1;
+    print "WARNING: Found many serials in output." if scalar @serials > 1;
+    print "Serial (raw): " . $serials[0] . "\n" if $debug;
+    $serials[0] =~ /DVD Serial Number: (.*?)$/;
+    my $serial = $1;
+    print "Serial (processed): " . $serial . "\n" if $debug;
+    return $serial;
+}
