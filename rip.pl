@@ -9,10 +9,14 @@ my $min_duration_seconds = 600;
 my $max_duration_seconds = 3600;
 my $input_device = '/dev/sr0';
 
-
 my @titles_to_transcode_for_this_drive = find_and_filter_titles($input_device, $min_duration_seconds, $max_duration_seconds);
-print "Processing done!\n\n";
+print Dumper @titles_to_transcode_for_this_drive;
 
+
+sub log_info_for_drive {
+    my ($device, $message) = @_;
+    print " - [" . localtime .  "] - [$device] - ";
+}
 
 sub get_title_from_raw {
     my @raw = @_;
@@ -41,7 +45,7 @@ sub get_serial_from_raw {
 sub find_and_filter_titles {
     my ($input_device, $min_duration_seconds, $max_duration_seconds) = @_;
 
-    print "About to scan drive...\n";
+    print "About to scan $input_device...\n";
     my @scan_return_raw = `HandBrakeCLI -v -i $input_device -t 0 2>&1`;
     print "Got " . scalar(@scan_return_raw) . " lines from scan.\n\n";
 
@@ -109,14 +113,17 @@ sub find_and_filter_titles {
     my $to_transcode_count = scalar(keys(%disk_titles));
     print "Filtered out $filtered_count titles. Will transcode $to_transcode_count titles.\n\n";
 
-    print Dumper \%disk_titles;
+    print Dumper \%disk_titles if $debug;
 
-    print "Attempting to coerce data into a more sensible (And ordered) format...\n";
+    print "Coercing data into a more sensible (And ordered) format and generating TranscodeRequests...\n";
     my @transcode_requests;
     my @sorted_title_ids = sort {$a <=> $b} (keys(%disk_titles));
     foreach my $title_id (@sorted_title_ids) {
-	my $transcode_request = {'title_id' => $title_id, 'input_drive' => $input_device, 'target_filename' => "$serial-$title-$title_id"};  
-	print Dumper $transcode_request;
+	my $transcode_request = {'title_id' => $title_id, 'input_drive' => $input_device, 'target_filename' => "$serial-$title-title-$title_id"};  
+	push @transcode_requests, $transcode_request;
+
     }
+    print "Replying with " . scalar @transcode_requests . " TranscodeRequest objects.\n\n";
+    return @transcode_requests;
 
 }
