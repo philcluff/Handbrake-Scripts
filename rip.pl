@@ -52,7 +52,7 @@ sub usage {
 
 sub transcode_file {
     my $transcode_request = shift;
-    my $cmd = "HandBrakeCLI -v -i $transcode_request->{input_device} -t $transcode_request->{title_id} -o \"$output_path/$transcode_request->{target_filename}.mkv\"  -4 -m -e x264 -x 'b-adapt=2:rc-lookahead=50:ref=6:bframes=8:subme=8:deblock=-1,-1:psy-rd=1|0.15' -q 19 --keep-display-aspect --loose-anamorphic --deinterlace='2:-1:-1:0:1' -B 192";
+    my $cmd = "HandBrakeCLI -v -i $transcode_request->{input_device} -t $transcode_request->{title_id} -o \"$output_path/$transcode_request->{target_filename}.mkv\"  -4 -m -e x264 -x 'b-adapt=2:rc-lookahead=50:ref=6:bframes=8:subme=8:deblock=-1,-1:psy-rd=1|0.15' -q 19 --keep-display-aspect --loose-anamorphic --deinterlace='2:-1:-1:0:1' -E faac,copy:ac3 -B 192";
     log_info($transcode_request->{input_device}, "About to run Transcode Command: [$cmd]");
     if ($ENV{ENCODE}) {
 	log_info($transcode_request->{input_device}, "WILL ACTUALLY ENCODE!");
